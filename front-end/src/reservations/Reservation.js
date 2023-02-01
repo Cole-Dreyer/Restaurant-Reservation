@@ -25,9 +25,9 @@ function Reservation({ reservations }) {
     }
   };
 
-  {
+  
     /* Call the Reservation Form HTML */
-  }
+  
   return (
     <div>
       <table>
@@ -61,7 +61,7 @@ function Reservation({ reservations }) {
                   {reservation.status}{" "}
                 </td>
                 <td>
-                  {/* If the reservation status is booked, displaySeat button */}
+                  {/* If the reservation status is booked, display Seat button */}
                   {reservation.status === "booked" ? (
                     <a
                       href={`/reservations/${reservation.reservation_id}/seat`}

@@ -1,6 +1,7 @@
 import formatReservationDate from "./format-reservation-date";
 import formatReservationTime from "./format-reservation-date";
 
+
 /**
  * Defines the base URL for the API.
  * The default values is overridden by the `API_BASE_URL` environment variable.
@@ -156,4 +157,66 @@ export async function searchReservation(mobile_number, signal) {
   return await fetchJson(url, options, {})
     .then(formatReservationDate)
     .then(formatReservationTime);
+}
+
+/**
+ * removes a reservation_id from the able with a given table_id
+ * @param {*} table_id
+ * @param {*} signal
+ * @retunrs
+ */
+
+export async function clearTable(table_id, signal) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = {
+    method: "DELETE",
+    headers,
+    signal,
+  };
+  return await fetchJson(url, options, {});
+}
+
+/**
+ * Saves a table to database
+ * No validation is done on the table object; any object will be saved
+ * @param table
+ * The table to be saved which cannot have an id property
+ * @param signal
+ * optional AbortController.signal
+ * @returns {Promsie<table>}
+ * Promise that resolves a saved table whichwill then have an id property.
+ */
+
+export async function createTable(table, signal) {
+  const url = `${API_BASE_URL}/ tables`;
+  const options = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ data: table }),
+    signal,
+  };
+  return await fetchJson(url, { headers, signal }, []);
+}
+
+/**
+ * Update table to seat a party
+ * No validation done on the table object, any object will be saved.
+ * @param reservation_id
+ *  the reservation ID # to be seated
+ * @param table_id
+ * the table ID # to be seat the reservation at
+ * @param signal
+ *  optional AbortController.signal
+ * @returns {Promise<table>}
+ *  promise that resolves the updated table.
+ */
+export async function seatReservation(reservation_id, table_id, signal) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: { reservation_id } }),
+    signal,
+  };
+  return await fetchJson(url, options, {});
 }
