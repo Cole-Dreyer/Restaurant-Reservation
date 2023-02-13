@@ -1,7 +1,6 @@
 import formatReservationDate from "./format-reservation-date";
 import formatReservationTime from "./format-reservation-date";
 
-
 /**
  * Defines the base URL for the API.
  * The default values is overridden by the `API_BASE_URL` environment variable.
@@ -160,12 +159,15 @@ export async function searchReservation(mobile_number, signal) {
 }
 
 /**
- * removes a reservation_id from the able with a given table_id
- * @param {*} table_id
- * @param {*} signal
- * @retunrs
+ * API calls for the "tables" table in the database
  */
 
+/**
+ * Removes a reservation_id from the table with the given table_id
+ * @param {*} table_id
+ * @param {*} signal
+ * @returns
+ */
 export async function clearTable(table_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
   const options = {
@@ -177,30 +179,40 @@ export async function clearTable(table_id, signal) {
 }
 
 /**
- * Saves a table to database
- * No validation is done on the table object; any object will be saved
+ * Saves table to the database.
+ * There is no validation done on the table object, any object will be saved.
  * @param table
- * The table to be saved which cannot have an id property
+ *  the table to save, which must not have an `id` property
  * @param signal
- * optional AbortController.signal
- * @returns {Promsie<table>}
- * Promise that resolves a saved table whichwill then have an id property.
+ *  optional AbortController.signal
+ * @returns {Promise<table>}
+ *  a promise that resolves the saved table, which will now have an `id` property.
  */
-
 export async function createTable(table, signal) {
-  const url = `${API_BASE_URL}/ tables`;
+  const url = `${API_BASE_URL}/tables`;
   const options = {
     method: "POST",
     headers,
     body: JSON.stringify({ data: table }),
     signal,
   };
+  return await fetchJson(url, options, {});
+}
+
+/**
+ * Retrieves all existing tables.
+ * @returns {Promise<[table]>}
+ *  a promise that resolves to a possibly empty array of a table saved in the database.
+ */
+export async function listTables(signal) {
+  const url = new URL(`${API_BASE_URL}/tables`);
+
   return await fetchJson(url, { headers, signal }, []);
 }
 
 /**
- * Update table to seat a party
- * No validation done on the table object, any object will be saved.
+ * Update table to seat a party at it.
+ * There is no validation done on the table object, any object will be saved.
  * @param reservation_id
  *  the reservation ID # to be seated
  * @param table_id
@@ -208,7 +220,7 @@ export async function createTable(table, signal) {
  * @param signal
  *  optional AbortController.signal
  * @returns {Promise<table>}
- *  promise that resolves the updated table.
+ *  a promise that resolves the updated table.
  */
 export async function seatReservation(reservation_id, table_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
