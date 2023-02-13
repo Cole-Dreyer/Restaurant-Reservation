@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { cancelReservation } from "../utils/api";
 
+
+// Obtain the useHistory to assist with page navigation
 function Reservation({ reservations }) {
-  // Obtain the useHistory to assist with page navigation
   const history = useHistory();
 
   const [error, setError] = useState(null);
@@ -14,7 +15,7 @@ function Reservation({ reservations }) {
 
     try {
       const result = window.confirm(
-        "Do you want to cancel this reservation? This action cannot be undone."
+        "Do you want to cancel this reservation? This cannot be undone."
       );
       if (result) {
         await cancelReservation(reservation_id);
@@ -25,11 +26,9 @@ function Reservation({ reservations }) {
     }
   };
 
-  
-    /* Call the Reservation Form HTML */
-  
   return (
     <div>
+      {/* Call the Reservation Form HTML */}
       <table>
         <thead>
           <tr>
@@ -39,13 +38,13 @@ function Reservation({ reservations }) {
             <th>Time</th>
             <th># of People</th>
             <th>Status</th>
-            <th>Seat</th>
-            <th>Edit</th>
-            <th>Cancel</th>
+            <th>Seat?</th>
+            <th>Edit?</th>
+            <th>Cancel?</th>
           </tr>
         </thead>
         <tbody>
-          {/* If the reservation is finished, don't show that reservation */}
+          {/* If the reservation is finished, dont show that reservation */}
           {reservations.map((reservation) =>
             reservation.status === "finished" ? (
               ""
@@ -61,7 +60,7 @@ function Reservation({ reservations }) {
                   {reservation.status}{" "}
                 </td>
                 <td>
-                  {/* If the reservation status is booked, display Seat button */}
+                  {/* If the reservation status is booked, display the Seat button */}
                   {reservation.status === "booked" ? (
                     <a
                       href={`/reservations/${reservation.reservation_id}/seat`}

@@ -5,14 +5,14 @@ import { useParams } from "react-router-dom";
 import { findReservation } from "../utils/api";
 
 function EditReservation({ loadDashboard }) {
-  //Create useStates for the mobile number and reservations to be listed.
+  // Create useStates for the mobile number and reservations to be listed.
   const [reservation, setReservation] = useState({});
   const [reservationError, setReservationError] = useState(null);
 
-  // Obtain the reservation ID that is being edited.
+  // Obtain the Reservation ID that is being edited.
   const reservation_id = useParams().reservation_id;
 
-  // Utilize useEffect to load reservation info and pass it to the reservation form
+  // Utilize userEffect to load reservation info to pass to reservation form.
   useEffect(loadReservation, [reservation_id]);
 
   function loadReservation() {
@@ -26,7 +26,6 @@ function EditReservation({ loadDashboard }) {
 
   return (
     <div>
-      {/* Call the Reservation Form */}
       <ReservationForm
         props={{
           isNew: false,

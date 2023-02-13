@@ -10,7 +10,7 @@ function ReservationForm({ props }) {
   // UseState for Error Handling
   const [error, setError] = useState(null);
 
-  //Empty reservation form object to pass passedReservation into
+  // Create empty Reservation object to load passedReservation into
   const [reservation, setReservation] = useState({
     first_name: "",
     last_name: "",
@@ -28,13 +28,12 @@ function ReservationForm({ props }) {
     }
   }, [isNew, props.passedReservation]);
 
-  //Event handler for creating a new reservation
-
+  // Event handler for when creating a reservation
   const handleSubmit = async function (event) {
     event.preventDefault();
     const abortController = new AbortController();
     try {
-      // If isNew is true, then call createReservation
+      // If isNew is true, then createReservation should be called.
       if (isNew) {
         let result = await createReservation(
           reservation,
@@ -54,8 +53,9 @@ function ReservationForm({ props }) {
       return () => abortController.abort();
     }
   };
+
   /**
-   * Handler for various field changes
+   * Handler for changes to various fields
    * @param {*} param0
    */
   const handleChange = ({ target }) => {
@@ -66,11 +66,11 @@ function ReservationForm({ props }) {
     });
   };
 
-  //HTML to return for form
+  // HTML to return
   return (
     <div>
       <ErrorAlert error={error} />
-      {/* Determine which event handler to use when the form is submitted */}
+      {/* Determine which event handler to use when form is submitted */}
       <form onSubmit={handleSubmit}>
         <table>
           <thead>
@@ -85,7 +85,7 @@ function ReservationForm({ props }) {
             </tr>
           </thead>
           <tbody>
-            {/* Table row for fist_name and last_name input labels */}
+            {/* Table row for first_name and last_name labels */}
             <tr>
               <td>
                 <label>First Name</label>
@@ -94,7 +94,7 @@ function ReservationForm({ props }) {
                 <label>Last Name</label>
               </td>
             </tr>
-            {/* table row for first_name and last_name inputs */}
+            {/* Table row for first_name and last_name inputs */}
             <tr>
               <td>
                 <input
@@ -108,14 +108,23 @@ function ReservationForm({ props }) {
               <td>
                 <input
                   id="lastName"
+                  type="text"
                   name="last_name"
                   onChange={handleChange}
-                  type="text"
-                  value={reservation.flast_name}
+                  value={reservation.last_name}
                 />
               </td>
             </tr>
-            {/* Table rows for mobile_number and people input labels */}
+            {/* Table row for mobile_number and people labels */}
+            <tr>
+              <td>
+                <label>Mobile Number</label>
+              </td>
+              <td>
+                <label>Number of People in Party</label>
+              </td>
+            </tr>
+            {/* Table row for mobile_number and people inputs*/}
             <tr>
               <td>
                 <input
@@ -156,14 +165,25 @@ function ReservationForm({ props }) {
                   pattern="\d{4}-\d{2}-\d{2}"
                 />
               </td>
+              <td>
+                <input
+                  id="reservationTime"
+                  type="time"
+                  name="reservation_time"
+                  onChange={handleChange}
+                  value={reservation.reservation_time}
+                  placeholder="HH:MM"
+                  pattern="[0-9]{2}:[0-9]{2}"
+                />
+              </td>
             </tr>
-            {/* Table row that is empty to provide space between inputs and buttons */}
+            {/* Empty table row to provide space between inputs and buttons */}
             <tr>
               <td>
                 <br />
               </td>
             </tr>
-            {/* Table Row for buttons */}
+            {/* Table Row for the buttons */}
             <tr>
               <td>
                 <button className="btn btn-primary ml-2" type="submit">
@@ -173,7 +193,7 @@ function ReservationForm({ props }) {
               <td>
                 <button
                   className="btn btn-secondary"
-                  /* on click, uuse anonymous event handler to go back one page in history */
+                  /* On Click, use anonymous event handlerto go back one page in history */
                   onClick={(e) => {
                     e.preventDefault();
                     history.go(-1);
@@ -186,7 +206,7 @@ function ReservationForm({ props }) {
           </tbody>
         </table>
       </form>{" "}
-      {/* Reservation from end for editing and creating reservation */}
+      {/* End of Form for modifying or creating a reservation */}
     </div>
   );
 }

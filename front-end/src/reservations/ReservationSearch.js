@@ -128,7 +128,7 @@ function ReservationSearch() {
                     )}
                   </td>
                   <td>
-                    {/* If the reservation status is booked, display the Cancel button */}
+                    {/* If the reservation status is booked, display the Edit button */}
                     {reservation.status === "booked" ? (
                       <button
                         className="btn btn-primary ml-2"
