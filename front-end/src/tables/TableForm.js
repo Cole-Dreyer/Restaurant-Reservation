@@ -1,50 +1,53 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import ErrorAlert from "../layout/ErrorAlert";
 
-//Import createTable function from api
+// Import the created createTable function from utils/api
 import { createTable } from "../utils/api";
+
+import ErrorAlert from "../layout/ErrorAlert.js";
 
 function TableForm({
   editTableName = "",
-  editCapaciy = "",
+  editCapacity = "",
   editId = "",
   isNew,
 }) {
-  //error handling useState
+  // UseState for Error Handling
   const [error, setError] = useState(null);
 
-  //useState for table fields
-  const [table, SetTable] = useState({
+  // UseStates for Table Fields
+  const [table, setTable] = useState({
     table_name: "",
     capacity: "",
   });
 
   const history = useHistory();
 
-  //Event handler for when creating a table
+  // Event handler for when creating a table
   const handleCreateSubmit = async function (event) {
     event.preventDefault();
     const abortController = new AbortController();
     try {
+      // Note, this is when the API is called to the back end.
       await createTable(table, abortController.signal);
-      history.push(`/dashbaord`);
+      // Make sure that after submitting, the page is redirected correctly.
+      history.push(`/dashboard`);
     } catch (error) {
       setError(error);
       return () => abortController.abort();
     }
   };
 
-  //Handler for when changes to fields occur
+  // Handler for changes to various fields
   const handleChange = ({ target }) => {
-    SetTable({
+    setTable({
       ...table,
       [target.name]:
         target.name === "capacity" ? Number(target.value) : target.value,
     });
   };
 
-  // HTML to be returned
+  // HTML to return
   return (
     <div>
       <ErrorAlert error={error} />
