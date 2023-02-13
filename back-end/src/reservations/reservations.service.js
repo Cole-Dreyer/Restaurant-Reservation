@@ -2,8 +2,9 @@ const knex = require("../db/connection");
 
 function create(reservation) {
   return knex("reservations")
-    .insert(reservation, "*")
-    .then((createdReservations) => createdReservations[0]);
+    .insert(reservation)
+    .returning("*")
+    .then((createdRecords) => createdRecords[0]);
 }
 
 function edit(reservation_id, reservation) {
@@ -36,36 +37,39 @@ function list(date) {
 }
 
 /**
- * Selects a reservation with a given Reservation ID
- * @param {*} reservation_id
- * The reservation ID is used to look up the reservation
- * @returns
+ * Select a reservation with the given reservation ID
+ * @param {*} reservation_id 
+ * The reservation ID used to look up the reservation
+ * @returns 
  */
 function read(reservation_id) {
-  return knex("reservations").select("*").where({ reservation_id }).first();
+    return knex("reservations")
+        .select("*")
+        .where({ reservation_id })
+        .first();
 }
 
 function search(mobile_number) {
-  return knex("reservations")
-    .whereRaw(
-      "translate(mobile_number, '() -', '') like ?",
-      `%${mobile_number.replace(/\D/g, "")}%`
-    )
-    .orderBy("reservation_date");
+    return knex("reservations")
+      .whereRaw(
+        "translate(mobile_number, '() -', '') like ?",
+        `%${mobile_number.replace(/\D/g, "")}%`
+      )
+      .orderBy("reservation_date");
 }
 
 async function update(reservation_id, status) {
-  return knex("reservations")
-    .select("*")
-    .where({ reservaiton_id })
-    .update({ status }, "*");
+    return knex("reservations")
+        .select("*")
+        .where({ reservation_id })
+        .update({ status }, "*");
 }
 
 module.exports = {
-  create,
-  edit,
-  list,
-  read,
-  search,
-  update,
+    create,
+    edit,
+    list,
+    read,
+    search,
+    update,
 };

@@ -2,26 +2,24 @@ const service = require("./reservations.service.js");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 /**
- * Format a date object as YYYY-MM-DD.
- * This function is not exported because the UI should avoid working direclty with the Date Instance.
- * This function can be exported however, if needed.
+ * Formats a Date object as YYYY-MM-DD.
+ *
+ * This function is *not* exported because the UI should generally avoid working directly with Date instance.
+ * You may export this function if you need it.
  *
  * @param date
- * an instance of a date object
+ *  an instance of a date object
  * @returns {string}
- * the specificed Date formatted as YYYY-MM-DD
+ *  the specified Date formatted as YYYY-MM-DD
  */
 
 function asDateString(date) {
   return `${date.getFullYear().toString(10)}-${(date.getMonth() + 1)
     .toString(10)
-    .padStart(2, "0")}-${date
-    .getDate()
-    .toString(10)
-    .padStart(2 < "0")}`;
+    .padStart(2, "0")}-${date.getDate().toString(10).padStart(2, "0")}`;
 }
 
-//Helper function to collect reservation IDs passed through via request parameters
+// Collect the reservation ID passed through the request parameters
 async function reservationExists(req, res, next) {
   const reservationId = req.params.reservation_id;
   const data = await service.read(reservationId);
@@ -29,7 +27,7 @@ async function reservationExists(req, res, next) {
   if (!data) {
     return next({
       status: 404,
-      message: `No reservations with ID # ${reservationId} exists.`,
+      message: `No reservation with ID # ${reservationId} exists.`,
     });
   }
 
@@ -38,6 +36,7 @@ async function reservationExists(req, res, next) {
 }
 
 /**
+ *
  * @param {*} req
  * @param {*} res
  * @param {*} next
@@ -48,7 +47,7 @@ function reservationValid(req, res, next) {
     return next({ status: 400, message: `data is missing` });
   }
 
-  //Fetches information for a new reservation.
+  // Fetch the information for the new reservation
   const theReservation = ({
     first_name,
     last_name,
@@ -75,16 +74,25 @@ function reservationValid(req, res, next) {
     !theReservation.reservation_date ||
     !theReservation.reservation_date.match(dateFormat)
   ) {
-    errorsArray.push("resevation_date");
+    errorsArray.push("reservation_date");
   }
   if (
     !theReservation.reservation_time ||
     !theReservation.reservation_time.match(timeFormat)
   ) {
-    errorsArray.push("resevation_time");
+    errorsArray.push("reservation_time");
   }
   if (!theReservation.people || typeof theReservation.people !== "number") {
     errorsArray.push("people");
+  }
+  if (theReservation.status === "seated") {
+    errorsArray.push("This reservation has already been seated");
+  }
+  if (theReservation.status === "finished") {
+    errorsArray.push("This reservation has already finished");
+  }
+  if (theReservation.status === "cancelled") {
+    errorsArray.push("This reservation was cancelled");
   }
 
   if (errorsArray.length === 0) {
@@ -98,60 +106,61 @@ function reservationValid(req, res, next) {
 }
 
 /**
- * Verify that use is making a reservation in the future only.
+ * Determine if a user is attempting to make a reservation in the future.
  * @param {*} req
  * @param {*} res
  * @param {*} next
  * @returns
  */
+
+// Create an array to store any errors in case the reservation is invalid
 function validFuture(req, res, next) {
-  // Creating an array to hold any errors should a reservation be invalid
   const errorsArray = [];
 
-  //Create string of current (today) date
+  // Obtain a string of today's date
   const currentDate = asDateString(new Date());
-  // Split the string to separate year, month and day
+  // Separate string into Year, Month, and Day
   let [currentYear, currentMonth, currentDay] = currentDate.split("-");
-  //Change the current year, month and day to numbers.
+  // Change currentYear, currentMonth, and currentDay into numbers
   currentYear = Number(currentYear);
   currentMonth = Number(currentMonth);
   currentDay = Number(currentDay);
 
-  //Get string of the reservation date
+  // Obtain a string of the reservation date
   const theReservationDate = res.locals.reservation.reservation_date;
-  // Split the string to separate year, month and day
+  // Separate Year, Month, and Day
   let [reservationYear, reservationMonth, reservationDay] =
     theReservationDate.split("-");
-  //Change the reservation year, month and day to numbers.
+  // Change the currentYear, currentMonth, and currentDay into numbers
   reservationYear = Number(reservationYear);
   reservationMonth = Number(reservationMonth);
   reservationDay = Number(reservationDay);
 
-  // Convert the string of the Reservation Date to a new date object
+  // Change string of the Reservation Date to a new Date object.
   const reservationDateObject = new Date(theReservationDate);
-  // Determine what week day it is
+  // Determine which day of the week that day is.
   const theDay = reservationDateObject.getDay() + 1;
 
-  // Determine if the reservation is being made for a Tuesday
+  // Determine if the reservation date is on a Tuesday
   if (theDay === 2) {
     errorsArray.push(`The restaurant is closed on Tuesday!`);
   }
 
-  // Determine if reservation date is in the past or not
+  // Determine if the reservation date is some time in the past
   if (reservationYear < currentYear) {
     errorsArray.push(
-      `You must schedule reserations for some time in the future!`
+      `You must schedule reservations for some time in the future!`
     );
   } else if (
     reservationYear === currentYear &&
     reservationMonth < currentMonth
   ) {
     errorsArray.push(
-      `You must schedule reserations for some time in the future!`
+      `You must schedule reservations for some time in the future!`
     );
   } else if (reservationMonth === currentMonth && reservationDay < currentDay) {
     errorsArray.push(
-      `You must schedule reserations for some time in the future!`
+      `You must schedule reservations for some time in the future!`
     );
   } else if (
     reservationMonth === currentMonth &&
@@ -160,12 +169,44 @@ function validFuture(req, res, next) {
     res.locals.today = true;
   }
 
-  // If no errors, continue forward
+  // Continue forward if no errors
   if (errorsArray.length === 0) {
     return next();
   }
 
-  // If an error is found, throw following error status 400 message.
+  // If an error exists, throw the error message with status 400
+  return next({
+    status: 400,
+    message: `There are issues with your reservation: ${errorsArray.join(
+      ", "
+    )}`,
+  });
+}
+
+// Create an array to store any errors in case the reservation status is invalid
+function validStatus(req, res, next) {
+  const errorsArray = [];
+
+  const theCurrentStatus = res.locals.reservation.status;
+  const theNewStatus = req.body.data.status;
+
+  if (theCurrentStatus === "finished") {
+    errorsArray.push("A finished reservation cannot be updated");
+  } else if (
+    theNewStatus !== "booked" &&
+    theNewStatus !== "seated" &&
+    theNewStatus !== "finished" &&
+    theNewStatus !== "cancelled"
+  ) {
+    errorsArray.push("The status is unknown or invalid");
+  }
+
+  // If an error exists, throw the error message with status 400
+  if (errorsArray.length === 0) {
+    return next();
+  }
+
+  // If an error was located, throw the error message with status 400
   return next({
     status: 400,
     message: `There are issues with your reservation: ${errorsArray.join(
@@ -175,68 +216,68 @@ function validFuture(req, res, next) {
 }
 
 /**
- * Verify that user is making a reservation at a valid time that the restaurant is open
+ * Verify that user is making reservation at a valid time when restaurant is open.
  * @param {*} req
  * @param {*} res
  * @param {*} next
  * @returns
  */
-
 function validTime(req, res, next) {
-  //Creating an array to hold any errors should a reservation be invalid
+  // Create an array to store any errors in case the reservation is invalid
   const errorsArray = [];
 
-  // Create constant in number of minutes for when reservations start being elgible to be made
-  const reservationsOpen = 630; // (10 + 60) + 30 = 10:30am
+  // Create a constant in number of minutes for when reservations start
+  // example: 630 = (10 x 60) + 30 -> 10:30 AM
+  const reservationsOpen = 630;
 
-  //Create a constant in number of minutes for when reservations close
-  // Such as: 1290 = (21 x 60) + 30 -> 21:30 -> 9:30pm
+  // Create a constant in number of minutes for when reservations close
+  // example: 1290 = (21 x 60) + 30 -> 21:30 -> 9:30 PM
   const reservationsClose = 1290;
 
-  // Create a constant that respresents the current date and time.
+  // Create a constant representing the current date and time.
   const currentDate = new Date();
 
   // Obtain the current hours
   const currentHours = currentDate.getHours();
 
-  //Obtain the current minutes
+  // Obtain the current minutes
   const currentMinutes = currentDate.getMinutes();
 
-  // Calculate current time in minutes
+  // Calculate the current time in minutes
   const currentTimeInMin = currentHours * 60 + currentMinutes;
 
-  //Get listed time for reservation
+  // Obtain the listed time for the reservation.
   const reservationTime = res.locals.reservation.reservation_time;
 
-  //Separate string to separate year, month and day
+  // Break down the string to separate Year, Month, and Day
   let [reservationHour, reservationMinute] = reservationTime.split(":");
 
-  //Convert reservationHour and reservationMinute into numbers
+  // Change the reservationHour and reservationMinute into numbers
   reservationHour = Number(reservationHour);
   reservationMinute = Number(reservationMinute);
 
-  // Convert hours and minutes into minutes only
+  // Convert the hours and minutes into only minutes.
   const reservationTimeInMin = reservationHour * 60 + reservationMinute;
 
-  //Determine if reservation date is in the past or not
+  // Check if the reservation date is some time in the past
   if (reservationTimeInMin < reservationsOpen) {
     errorsArray.push(
-      `The restaurant is not open before 10:30am. Please select another time.`
+      `The restaurant does not open before 10:30 AM.  Please select another time.`
     );
   } else if (reservationTimeInMin > reservationsClose) {
     errorsArray.push(
-      `No more reservations after 9:30pm. The restaurant closes at 9:30pm.`
+      `No more reservations after 9:30 PM, please.  The restaurant will close at 10:30`
     );
   } else if (res.locals.today && reservationTimeInMin < currentTimeInMin) {
-    errorsArray.push(`Please select a reservation time later in the day.`);
+    errorsArray.push(`Please select a later time today.`);
   }
 
-  //Continue forward if no errors.
+  // If there are no errors reported, continue onward
   if (errorsArray.length === 0) {
     return next();
   }
 
-  //If error is present, throw error message with status code 400
+  // If an error was located, throw the error message with status 400
   return next({
     status: 400,
     message: `There are issues with your reservation: ${errorsArray.join(
@@ -250,22 +291,23 @@ function validTime(req, res, next) {
  * @param {*} req
  * @param {*} res
  */
-
-//Call create method from reservations.service and return status code
 async function create(req, res) {
   const newReservation = res.locals.reservation;
+  // Call the create method from reservations.service
   const createdReservation = await service.create(newReservation);
+  // Return with the result along with status 201
   res.status(201).json({ data: createdReservation });
 }
 
-// Allow for reservation edits
 async function edit(req, res) {
+  // Collect the reservation ID passed through the request parameters
   let reservationId = req.params.reservation_id;
   reservationId = Number(reservationId);
 
+  // Collect the edited reservation passed through the request body.
   const editedReservation = req.body.data;
 
-  //Service call to put the edited reservaiton to the database
+  // Make the service call to "put" the edited reservation to the database
   const updatedReservation = await service.edit(
     reservationId,
     editedReservation
@@ -276,9 +318,11 @@ async function edit(req, res) {
 
 /**
  * List handler for reservation resources
+ * @param {*} req
+ * @param {*} res
  */
 async function list(req, res) {
-  // Check to see if "date" is the key in query
+  // Determine if "date" is the key in query
   if (req.query.date) {
     const { date } = req.query;
     let data = [];
@@ -294,7 +338,7 @@ async function list(req, res) {
 }
 
 /**
- * Returns the reservation that has the specific reservation ID from the parameters
+ * Returns the reservation that has the reservation ID from the parameters
  * @param {*} req
  * @param {*} res
  * @returns
@@ -304,14 +348,16 @@ function read(req, res) {
 }
 
 async function updateStatus(req, res) {
-  let reservationId = req.params.resevation_id;
+  // Gather the reservation ID passed through the request parameters
+  let reservationId = req.params.reservation_id;
   reservationId = Number(reservationId);
 
-  // Obtain new status that is passed through request body
+  // Gather new status passed through the request body.
   const newStatus = req.body.data.status;
 
-  // Make service call to put new status in database
+  // Make the service call to "put" the new status to the database
   const updatedReservation = await service.update(reservationId, newStatus);
+
   res.status(200).json({ data: updatedReservation[0] });
 }
 
@@ -329,7 +375,7 @@ module.exports = {
     validTime,
     asyncErrorBoundary(edit),
   ],
-  list: [asyncErrorBoundary(list)],
+  list: asyncErrorBoundary(list),
   read: [asyncErrorBoundary(reservationExists), read],
   update: [
     asyncErrorBoundary(reservationExists),
