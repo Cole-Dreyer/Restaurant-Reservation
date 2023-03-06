@@ -128,6 +128,7 @@ function ReservationForm({ props }) {
             <tr>
               <td>
                 <input
+                  type="number"
                   id="mobileNumber"
                   name="mobile_number"
                   onChange={handleChange}
